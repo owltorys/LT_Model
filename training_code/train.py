@@ -89,8 +89,8 @@ def save_checkpoint(state, is_best, save_dir, filename='checkpoint.pth'):
     filepath = os.path.join(save_dir, filename)
     torch.save(state, filepath)
     if is_best:
-        shutil.copyfile(filepath, os.path.join(save_dir, 'model_best.pth'))
-        print(f"💾 Saved new best model to: {os.path.join(save_dir, 'model_best.pth')}")
+        shutil.copyfile(filepath, os.path.join(save_dir, 'best_model.pth'))
+        print(f"💾 Saved new best model to: {os.path.join(save_dir, 'best_model.pth')}")
 
 class AverageMeter:
     def __init__(self): self.reset()
@@ -295,8 +295,7 @@ def main():
     criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weights)
     
     scaler = GradScaler()
-    save_dir = os.path.join(args.save_dir, 'finetune_multilabel_mixup_ema')
-    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(args.save_dir, exist_ok=True)
 
     stages = [
         {'name': 'Stage 1_Classifier', 'lr_factor': 1.0, 'target': 'classifier', 'epochs': 5},
@@ -354,7 +353,7 @@ def main():
                 'epoch': epoch+1,
                 'state_dict': state_dict_to_save, # 存的是 EMA 權重
                 'best_f1': global_best_f1,
-            }, is_best, save_dir, filename=f"{stage['name']}_last.pth")
+            }, is_best, args.save_dir, filename=f"{stage['name']}_last.pth")
 
     print(f"\n✅ Training Completed. Best F1: {global_best_f1:.4f}")
 
