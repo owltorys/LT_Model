@@ -216,41 +216,7 @@ class MultiLabelDistillLoss(nn.Module):
         total_loss = loss_hard + (self.alpha * loss_soft)
         return total_loss, loss_hard, loss_soft
 
-def create_deploy_model(model):
-    print("🔨 Creating fused deploy model...")
-    deploy_model = copy.deepcopy(model)
-    deploy_model.eval()
-    try:
-        import torch.ao.nn.intrinsic.qat as nniqat
-    except ImportError:
-        nniqat = None
-        
-    def _recursive_fuse(module):
-        for name, child in module.named_children():
-            try:
-                # 處理 Conv + BN + ReLU (如 Conv1)
-                if nniqat is not None and isinstance(child, nniqat.ConvBnReLU2d):
-                    if hasattr(child, 'bn'):
-                        fused_conv = fuse_conv_bn_eval(child, child.bn)
-                    else:
-                        fused_conv = child
-                    if hasattr(child, 'weight_fake_quant'): fused_conv.weight_fake_quant = child.weight_fake_quant
-                    replaced_module = nn.Sequential(fused_conv, nn.ReLU(inplace=True))
-                    setattr(module, name, replaced_module)
-                # 處理 Conv + BN (如 Conv5)
-                elif nniqat is not None and isinstance(child, nniqat.ConvBn2d):
-                    if hasattr(child, 'bn'):
-                        fused_conv = fuse_conv_bn_eval(child, child.bn)
-                    else:
-                        fused_conv = child
-                    if hasattr(child, 'weight_fake_quant'): fused_conv.weight_fake_quant = child.weight_fake_quant
-                    setattr(module, name, fused_conv)
-                else:
-                    _recursive_fuse(child)
-            except Exception as e:
-                pass # 避免融合引發錯誤中斷
-    _recursive_fuse(deploy_model)
-    return deploy_model
+
 
 # ==========================================
 # 5. 主程式
@@ -439,13 +405,7 @@ def main():
             best_f1 = f1_macro
             print(f"⭐ New Best F1: {best_f1:.4f} -> Saving models...")
             
-            torch.save(eval_model.state_dict(), os.path.join(CONFIG['save_dir'], 'best_student_qat.pth'))
-            try:
-                deploy_model = create_deploy_model(eval_model)
-                torch.save(deploy_model.state_dict(), os.path.join(CONFIG['save_dir'], 'deploy_model.pth'))
-            except Exception as e:
-                print(f"⚠️ 建立 deploy model 失敗: {e}")
-            
+            torch.save(eval_model.state_dict(), os.path.join(CONFIG['save_dir'], 'best_model.pth'))            
     print(f"\n✅ Training Completed. Best F1: {best_f1:.4f}")
 
 if __name__ == '__main__':
