@@ -26,7 +26,7 @@ def get_args():
     parser.add_argument('--lr', default=0.001, type=float) 
     parser.add_argument('--save-dir', default='models/checkpoints/teacher_model')
     parser.add_argument('--resume', default='', type=str)
-    parser.add_argument('--num-workers', default=0, type=int)
+    parser.add_argument('--num-workers', default=4, type=int)
     parser.add_argument('--data-root', required=True)
     parser.add_argument('--full-csv', default='DowDwen_set_resized.csv')
     parser.add_argument('--k-folds', default=5, type=int)
