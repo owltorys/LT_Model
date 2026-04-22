@@ -31,7 +31,7 @@ def get_args():
     parser.add_argument('--q-frac-weight', type=int, default=8)
     parser.add_argument('--q-frac-act', type=int, default=8)
     parser.add_argument('--seed', default=24, type=int)
-    parser.add_argument('--num-workers', default=0, type=int)
+    parser.add_argument('--num-workers', default=4, type=int)
     parser.add_argument('--data-root', required=True)
     parser.add_argument('--full-csv', default='DowDwen_set_resized.csv')
     parser.add_argument('--k-folds', default=5, type=int)
